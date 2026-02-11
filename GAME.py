@@ -79,8 +79,8 @@ lokasi_kota = {
     ),
     "Laboratorium": Lokasi(
         "Laboratorium",
-        "Pusat penelitian biologis. Sumber virus zombie berasal dari sini!",
-        ["Zombie Mutan", "Zombie Mutan"]
+        "Pusat penelitian biologis. Sumber virus zombie berasal dari sini! Terasa ada sesuatu yang menakutkan di dalam...",
+        ["Zombie Mutan", "Zombie Mutan", "AGUNG SUNDAKI"]
     ),
     "Persimpangan Jalan": Lokasi(
         "Persimpangan Jalan",
@@ -99,6 +99,15 @@ def pertarungan(pemain, musuh):
     print(f"\n⚔️ PERTARUNGAN DIMULAI!")
     print(f"Vs {musuh.nama}\n")
     
+    # Cek apakah ini AGUNG SUNDAKI
+    if musuh.nama == "AGUNG SUNDAKI" and pemain.level < 67:
+        print(f"\n⚠️ {musuh.nama} adalah boss yang sangat kuat!")
+        print(f"📊 Level mu: {pemain.level}")
+        print(f"⚡ Level yang dibutuhkan: 67")
+        print(f"\n😱 Aura gelap memancar dari {musuh.nama}!")
+        print(f"💀 Kamu terlalu lemah untuk melawan musuh ini!")
+        print(f"⚔️ Setiap serangan mu TIDAK BERHASIL merugikan {musuh.nama}!\n")
+    
     while pemain.hp > 0 and musuh.hp > 0:
         pemain.tampilkan_status()
         musuh.tampilkan_status()
@@ -112,9 +121,16 @@ def pertarungan(pemain, musuh):
         
         if pilihan == "1":
             # Serangan pemain
-            damage = random.randint(15, 35)
-            musuh.hp -= damage
-            print(f"\n💥 Kamu menyerang! Damage: {damage}")
+            # Cek apakah pemain bisa menyerang AGUNG SUNDAKI
+            if musuh.nama == "AGUNG SUNDAKI" and pemain.level < 67:
+                damage = 0
+                print(f"\n💥 Kamu menyerang {musuh.nama}!")
+                print(f"❌ Serangan mu TIDAK BERHASIL! Level mu terlalu rendah!")
+                print(f"📊 Butuh level 67 untuk melukai {musuh.nama}!")
+            else:
+                damage = random.randint(15, 35)
+                musuh.hp -= damage
+                print(f"\n💥 Kamu menyerang! Damage: {damage}")
             
             if musuh.hp <= 0:
                 print(f"\n✨ {musuh.nama} berhasil dikalahkan!")
@@ -240,7 +256,8 @@ def jelajahi_kota(pemain):
                 if opsi == 'y':
                     zombies_di_lokasi = {
                         "Zombie Biasa": Zombie("Zombie Biasa", 30, 15, 50),
-                        "Zombie Mutan": Zombie("Zombie Mutan", 60, 25, 100)
+                        "Zombie Mutan": Zombie("Zombie Mutan", 60, 25, 100),
+                        "AGUNG SUNDAKI": Zombie("AGUNG SUNDAKI", 500, 50, 1000)
                     }
                     
                     for zombie_type in lokasi.zombie_spawn:
