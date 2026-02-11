@@ -19,12 +19,15 @@ class Pemain:
         self.quest_aktif = None
         self.quest_selesai = []
         self.game_selesai = False
+        self.god_mode = False
         
     def tampilkan_status(self):
+        god_mode_status = " ⚡ GOD MODE" if self.god_mode else ""
         print(f"\n╔════════════════════════════════════════╗")
         print(f"║ NAMA: {self.nama:<34} ║")
         print(f"║ Level: {self.level:<32} ║")
-        print(f"║ HP: {self.hp}/{self.max_hp:<33} ║")
+        hp_display = f"HP: {self.hp}/{self.max_hp}" + god_mode_status
+        print(f"║ {hp_display:<38} ║")
         print(f"║ Mana: {self.mana}/{self.max_mana:<31} ║")
         print(f"║ EXP: {self.exp}/{self.exp_max:<33} ║")
         print(f"║ Emas: {self.emas:<34} ║")
@@ -128,8 +131,19 @@ def pertarungan(pemain, musuh):
         
         if pilihan == "1":
             # Serangan pemain
+            # Jika god mode aktif, langsung kalahkan musuh
+            if pemain.god_mode:
+                damage = random.randint(9999, 99999)
+                musuh.hp = -999  # Langsung mati
+                print(f"\n⚡ [GOD MODE] Kamu menyerang dengan kekuatan DEWA! Damage: {damage}")
+                print(f"\n✨ {musuh.nama} berhasil dikalahkan dengan mudah!")
+                pemain.exp += musuh.exp_drop * 10
+                pemain.emas += random.randint(500, 1000)
+                print(f"📊 +{musuh.exp_drop * 10} EXP, +{500}-1000 Emas (Mode Dewa)")
+                cek_level_up(pemain)
+                return True
             # Cek apakah pemain bisa menyerang AGUNG SUNDAKI
-            if musuh.nama == "AGUNG SUNDAKI" and pemain.level < 67:
+            elif musuh.nama == "AGUNG SUNDAKI" and pemain.level < 67:
                 damage = 0
                 print(f"\n💥 Kamu menyerang {musuh.nama}!")
                 print(f"❌ Serangan mu TIDAK BERHASIL! Level mu terlalu rendah!")
@@ -147,10 +161,14 @@ def pertarungan(pemain, musuh):
                 cek_level_up(pemain)
                 return True
             
-            # Serangan balik zombie
-            damage_musuh = random.randint(10, musuh.atk)
-            pemain.hp -= damage_musuh
-            print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
+            # Serangan balik zombie (tidak terkena jika god mode)
+            if pemain.god_mode:
+                print(f"👹 {musuh.nama} mencoba menyerangmu!")
+                print(f"🛡️ [GOD MODE] Serangan diabaikan! Pertahanan DEWA tidak tertembus!")
+            else:
+                damage_musuh = random.randint(10, musuh.atk)
+                pemain.hp -= damage_musuh
+                print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
             
         elif pilihan == "2":
             if "Obat HP" in pemain.inventori and pemain.inventori["Obat HP"] > 0:
@@ -159,23 +177,28 @@ def pertarungan(pemain, musuh):
                 pemain.inventori["Obat HP"] -= 1
                 print(f"\n💊 Kamu menggunakan Obat HP! +{heal} HP")
                 
-                damage_musuh = random.randint(10, musuh.atk)
-                pemain.hp -= damage_musuh
-                print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
+                if not pemain.god_mode:
+                    damage_musuh = random.randint(10, musuh.atk)
+                    pemain.hp -= damage_musuh
+                    print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
+                else:
+                    print(f"👹 {musuh.nama} mencoba menyerangmu!")
+                    print(f"🛡️ [GOD MODE] Serangan diserap oleh pelindung DEWA!")
             else:
                 print("\n❌ Tidak ada obat!")
                 
         elif pilihan == "3":
-            if random.random() > 0.5:
+            if pemain.god_mode or random.random() > 0.5:
                 print("\n💨 Kamu berhasil lari!")
                 return False
             else:
                 print("\n❌ Lari gagal!")
-                damage_musuh = random.randint(10, musuh.atk)
-                pemain.hp -= damage_musuh
-                print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
+                if not pemain.god_mode:
+                    damage_musuh = random.randint(10, musuh.atk)
+                    pemain.hp -= damage_musuh
+                    print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
         
-        if pemain.hp <= 0:
+        if pemain.hp <= 0 and not pemain.god_mode:
             print(f"\n💀 Kamu kalah! Pertarungan berakhir.")
             pemain.hp = 1
             return False
@@ -378,6 +401,34 @@ def tampilkan_game_over(pemain):
     
     print("\\n" + "="*70)
 
+# ===== SISTEM CHEAT =====
+def aktifkan_god_mode(pemain):
+    pemain.god_mode = True
+    pemain.hp = 99999
+    pemain.max_hp = 99999
+    pemain.mana = 99999
+    pemain.max_mana = 99999
+    pemain.level = 67
+    pemain.emas = 999999
+    print(f"\n⚡ GOD MODE DIAKTIFKAN! ⚡")
+    print(f"💥 Status MC meningkat drastis!")
+    print(f"   • HP: ∞")
+    print(f"   • Mana: ∞")
+    print(f"   • Level: {pemain.level}")
+    print(f"   • Emas: {pemain.emas}")
+    print(f"\n🎮 Kamu sekarang adalah DEWA SEJATI! Tidak ada yang bisa mengalahkan Anda!")
+    time.sleep(2)
+
+def cek_cheat_code(pemain):
+    cheat = input("\n🔐 Masukkan kode cheat (atau tekan Enter untuk skip): ").strip().lower()
+    
+    if cheat == "godmode" or cheat == "immortal" or cheat == "hercules" or cheat == "abc321":
+        aktifkan_god_mode(pemain)
+    elif cheat == "":
+        pass  # Tidak ada cheat
+    else:
+        print("❌ Kode cheat tidak dikenali!")
+
 def restart_atau_keluar():
     while True:
         print(f"\\n{'='*40}")
@@ -537,9 +588,10 @@ def menu_utama(pemain):
         print(f"3. Lihat Quest")
         print(f"4. Lihat Inventori")
         print(f"5. Istirahat & Selamatkan Game")
-        print(f"6. Keluar Game")
+        print(f"6. Aktivasi Cheat Code")
+        print(f"7. Keluar Game")
         
-        pilihan = input("\nPilih menu (1-6): ").strip()
+        pilihan = input("\nPilih menu (1-7): ").strip()
         
         if pilihan == "1":
             pemain.tampilkan_status()
@@ -565,6 +617,9 @@ def menu_utama(pemain):
             time.sleep(1)
             
         elif pilihan == "6":
+            cek_cheat_code(pemain)
+            
+        elif pilihan == "7":
             print(f"\n👋 Terima kasih telah bermain!")
             print(f"📊 Statistik Akhir:")
             print(f"   Level: {pemain.level}")
@@ -605,6 +660,9 @@ def game_utama():
         nama = input("\n👤 Siapa namamu, Pahlawan? ")
         pemain = Pemain(nama)
         
+        # Tanyakan apakah ingin menggunakan cheat
+        cek_cheat_code(pemain)
+        
         print(f"\n✨ Selamat datang, {pemain.nama}!")
         print(f"   Petualanganmu dimulai di {pemain.lokasi}...")
         time.sleep(2)
@@ -615,8 +673,8 @@ def game_utama():
         if pemain.game_selesai:
             if not restart_atau_keluar():
                 break
-        # Jika HP = 1 (mati), tampilkan game over
-        elif pemain.hp == 1:
+        # Jika HP = 1 (mati) dan bukan god mode, tampilkan game over
+        elif pemain.hp == 1 and not pemain.god_mode:
             tampilkan_game_over(pemain)
             if not restart_atau_keluar():
                 break
