@@ -1,0 +1,337 @@
+import time
+import random
+
+# ===== KELAS PEMAIN =====
+class Pemain:
+    def __init__(self, nama):
+        self.nama = nama
+        self.hp = 100
+        self.max_hp = 100
+        self.mana = 50
+        self.max_mana = 50
+        self.level = 1
+        self.exp = 0
+        self.exp_max = 100
+        self.emas = 100
+        self.inventori = {"Pistol": 1, "Peluru": 30, "Obat HP": 3}
+        self.lokasi = "Gerbang Kota"
+        self.quest_aktif = None
+        self.quest_selesai = []
+        
+    def tampilkan_status(self):
+        print(f"\n╔════════════════════════════════════════╗")
+        print(f"║ NAMA: {self.nama:<34} ║")
+        print(f"║ Level: {self.level:<32} ║")
+        print(f"║ HP: {self.hp}/{self.max_hp:<33} ║")
+        print(f"║ Mana: {self.mana}/{self.max_mana:<31} ║")
+        print(f"║ EXP: {self.exp}/{self.exp_max:<33} ║")
+        print(f"║ Emas: {self.emas:<34} ║")
+        print(f"║ Lokasi: {self.lokasi:<31} ║")
+        print(f"╚════════════════════════════════════════╝")
+        
+    def tampilkan_inventori(self):
+        print(f"\n📦 INVENTORI:")
+        if self.inventori:
+            for item, jumlah in self.inventori.items():
+                print(f"  • {item}: {jumlah}")
+        else:
+            print("  (Inventori kosong)")
+
+# ===== KELAS ZOMBIE =====
+class Zombie:
+    def __init__(self, nama, hp, atk, exp_drop):
+        self.nama = nama
+        self.hp = hp
+        self.max_hp = hp
+        self.atk = atk
+        self.exp_drop = exp_drop
+        
+    def tampilkan_status(self):
+        print(f"\n👹 {self.nama}")
+        print(f"   HP: {self.hp}/{self.max_hp}")
+
+# ===== KELAS LOKASI =====
+class Lokasi:
+    def __init__(self, nama, deskripsi, zombie_spawn=None):
+        self.nama = nama
+        self.deskripsi = deskripsi
+        self.zombie_spawn = zombie_spawn if zombie_spawn else []
+        
+    def tampilkan_info(self):
+        print(f"\n🏘️ {self.nama}")
+        print(f"   {self.deskripsi}")
+
+# ===== INISIALISASI KOTA =====
+lokasi_kota = {
+    "Gerbang Kota": Lokasi(
+        "Gerbang Kota",
+        "Pintu masuk kota SERLOK TAK PARANI. Udara terasa dingin dan mencekam."
+    ),
+    "Pasar Utama": Lokasi(
+        "Pasar Utama",
+        "Pasar yang dulu ramai, kini penuh dengan zombie. Suara desisan terdengar di mana-mana.",
+        ["Zombie Biasa", "Zombie Biasa"]
+    ),
+    "Rumah Sakit": Lokasi(
+        "Rumah Sakit",
+        "Rumah sakit tertua di kota. Mungkin ada jadwal penelitian virus zombie di sini.",
+        ["Zombie Mutan", "Zombie Biasa", "Zombie Biasa"]
+    ),
+    "Laboratorium": Lokasi(
+        "Laboratorium",
+        "Pusat penelitian biologis. Sumber virus zombie berasal dari sini!",
+        ["Zombie Mutan", "Zombie Mutan"]
+    ),
+    "Persimpangan Jalan": Lokasi(
+        "Persimpangan Jalan",
+        "Jalan utama yang menghubungkan berbagai lokasi. Ada zombie berpatroli.",
+        ["Zombie Biasa"]
+    ),
+    "Gedung Pemerintah": Lokasi(
+        "Gedung Pemerintah",
+        "Kantor pusat pemerintahan kota. Di sini mungkin tersimpan dokumen penting.",
+        ["Zombie Biasa", "Zombie Biasa", "Zombie Mutan"]
+    )
+}
+
+# ===== SISTEM PERTARUNGAN =====
+def pertarungan(pemain, musuh):
+    print(f"\n⚔️ PERTARUNGAN DIMULAI!")
+    print(f"Vs {musuh.nama}\n")
+    
+    while pemain.hp > 0 and musuh.hp > 0:
+        pemain.tampilkan_status()
+        musuh.tampilkan_status()
+        
+        print("\n🎮 PILIHAN AKSI:")
+        print("1. Serang")
+        print("2. Gunakan Obat")
+        print("3. Lari")
+        
+        pilihan = input("\nPilih aksi (1-3): ").strip()
+        
+        if pilihan == "1":
+            # Serangan pemain
+            damage = random.randint(15, 35)
+            musuh.hp -= damage
+            print(f"\n💥 Kamu menyerang! Damage: {damage}")
+            
+            if musuh.hp <= 0:
+                print(f"\n✨ {musuh.nama} berhasil dikalahkan!")
+                pemain.exp += musuh.exp_drop
+                pemain.emas += random.randint(20, 50)
+                print(f"📊 +{musuh.exp_drop} EXP, +{20}-50 Emas")
+                cek_level_up(pemain)
+                return True
+            
+            # Serangan balik zombie
+            damage_musuh = random.randint(10, musuh.atk)
+            pemain.hp -= damage_musuh
+            print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
+            
+        elif pilihan == "2":
+            if "Obat HP" in pemain.inventori and pemain.inventori["Obat HP"] > 0:
+                heal = 50
+                pemain.hp = min(pemain.hp + heal, pemain.max_hp)
+                pemain.inventori["Obat HP"] -= 1
+                print(f"\n💊 Kamu menggunakan Obat HP! +{heal} HP")
+                
+                damage_musuh = random.randint(10, musuh.atk)
+                pemain.hp -= damage_musuh
+                print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
+            else:
+                print("\n❌ Tidak ada obat!")
+                
+        elif pilihan == "3":
+            if random.random() > 0.5:
+                print("\n💨 Kamu berhasil lari!")
+                return False
+            else:
+                print("\n❌ Lari gagal!")
+                damage_musuh = random.randint(10, musuh.atk)
+                pemain.hp -= damage_musuh
+                print(f"👹 {musuh.nama} menyerangmu! Damage: {damage_musuh}")
+        
+        if pemain.hp <= 0:
+            print(f"\n💀 Kamu kalah! Pertarungan berakhir.")
+            pemain.hp = 1
+            return False
+        
+        print("\n" + "="*40)
+        time.sleep(1)
+
+def cek_level_up(pemain):
+    if pemain.exp >= pemain.exp_max:
+        pemain.level += 1
+        pemain.exp = 0
+        pemain.exp_max += 50
+        pemain.max_hp += 20
+        pemain.hp = pemain.max_hp
+        pemain.max_mana += 15
+        pemain.mana = pemain.max_mana
+        print(f"\n⭐ LEVEL UP! Kamu sekarang level {pemain.level}!")
+
+# ===== SISTEM QUEST =====
+def tampilkan_quest(pemain):
+    print(f"\n📜 QUEST")
+    print("="*40)
+    
+    quests = {
+        "Membersihkan Pasar": {
+            "deskripsi": "Bersihkan Pasar Utama dari zombies",
+            "lokasi": "Pasar Utama",
+            "target": 2,
+            "reward_exp": 150,
+            "reward_emas": 100
+        },
+        "Investigasi Rumah Sakit": {
+            "deskripsi": "Cari informasi tentang virus di Rumah Sakit",
+            "lokasi": "Rumah Sakit",
+            "target": 3,
+            "reward_exp": 200,
+            "reward_emas": 150
+        },
+        "Serang Laboratorium": {
+            "deskripsi": "Musnahkan pusat virus di Laboratorium",
+            "lokasi": "Laboratorium",
+            "target": 2,
+            "reward_exp": 300,
+            "reward_emas": 250
+        }
+    }
+    
+    num = 1
+    for nama_quest, detail in quests.items():
+        status = "✓" if nama_quest in pemain.quest_selesai else " "
+        print(f"[{status}] {num}. {nama_quest}")
+        print(f"    {detail['deskripsi']}")
+        num += 1
+    
+    return quests
+
+# ===== PENJELAJAHAN KOTA =====
+def jelajahi_kota(pemain):
+    print(f"\n🗺️ PETA KOTA SERLOK TAK PARANI")
+    print("="*40)
+    
+    lokasi_list = list(lokasi_kota.keys())
+    for i, loc in enumerate(lokasi_list, 1):
+        print(f"{i}. {loc}")
+    print(f"{len(lokasi_list)+1}. Kembali ke Menu Utama")
+    
+    pilihan = input("\nKemana kamu ingin pergi? (1-{}): ".format(len(lokasi_list)+1)).strip()
+    
+    try:
+        idx = int(pilihan) - 1
+        if idx == len(lokasi_list):
+            return
+        
+        if 0 <= idx < len(lokasi_list):
+            loc_name = lokasi_list[idx]
+            lokasi = lokasi_kota[loc_name]
+            pemain.lokasi = loc_name
+            
+            lokasi.tampilkan_info()
+            
+            if lokasi.zombie_spawn:
+                print(f"\n👹 Ada {len(lokasi.zombie_spawn)} zombie di sini!")
+                opsi = input("Lawan mereka? (y/t): ").lower()
+                
+                if opsi == 'y':
+                    zombies_di_lokasi = {
+                        "Zombie Biasa": Zombie("Zombie Biasa", 30, 15, 50),
+                        "Zombie Mutan": Zombie("Zombie Mutan", 60, 25, 100)
+                    }
+                    
+                    for zombie_type in lokasi.zombie_spawn:
+                        musuh = zombies_di_lokasi[zombie_type]
+                        if not pertarungan(pemain, musuh):
+                            break
+            else:
+                print("\n✨ Lokasi ini aman dari zombie.")
+    except ValueError:
+        print("\n❌ Pilihan tidak valid!")
+
+# ===== MENU UTAMA =====
+def menu_utama(pemain):
+    while True:
+        print(f"\n{'='*40}")
+        print(f"🎮 BOOYAH BERSAMA - Zombie Apocalypse")
+        print(f"{'='*40}")
+        print(f"1. Lihat Status")
+        print(f"2. Jelajahi Kota")
+        print(f"3. Lihat Quest")
+        print(f"4. Lihat Inventori")
+        print(f"5. Istirahat & Selamatkan Game")
+        print(f"6. Keluar Game")
+        
+        pilihan = input("\nPilih menu (1-6): ").strip()
+        
+        if pilihan == "1":
+            pemain.tampilkan_status()
+            
+        elif pilihan == "2":
+            jelajahi_kota(pemain)
+            
+        elif pilihan == "3":
+            tampilkan_quest(pemain)
+            
+        elif pilihan == "4":
+            pemain.tampilkan_inventori()
+            
+        elif pilihan == "5":
+            print(f"\n💤 {pemain.nama} istirahat di tempat aman...")
+            pemain.hp = pemain.max_hp
+            pemain.mana = pemain.max_mana
+            print(f"✨ Kesehatan dan Mana pulih kembali!")
+            print(f"💾 Game disimpan!")
+            time.sleep(1)
+            
+        elif pilihan == "6":
+            print(f"\n👋 Terima kasih telah bermain!")
+            print(f"📊 Statistik Akhir:")
+            print(f"   Level: {pemain.level}")
+            print(f"   Total Emas: {pemain.emas}")
+            print(f"   Quest Selesai: {len(pemain.quest_selesai)}")
+            break
+        
+        else:
+            print("\n❌ Pilihan tidak valid!")
+
+# ===== INTRO GAME =====
+def intro_game():
+    print("\n" + "="*50)
+    print("🎮 SELAMAT DATANG DI GAME BOOYAH BERSAMA")
+    print("="*50)
+    print("\n📖 CERITA:")
+    print("""
+Kota SERLOK TAK PARANI yang dulunya ramai kini telah berubah
+menjadi kota mayat. Wabah zombie apocalypse telah melanda
+seluruh wilayah kota. Tidak ada yang tahu bagaimana virus ini
+menyebar, hanya ada satu hal yang jelas...
+
+SESEORANG HARUS MENGHENTIKANNYA!
+
+Kamu adalah satu-satunya harapan. Bersenjata dengan keyakinan
+dan keberanian, kamu harus menjelajahi kota yang berbahaya ini,
+mengungkap misteri virus, dan menghentikan wabah sebelum semuanya
+terlambat.
+
+Apakah kamu siap untuk menyelamatkan Kota Serlok Tak Parani?
+    """)
+    print("="*50)
+
+def game_utama():
+    intro_game()
+    
+    nama = input("\n👤 Siapa namamu, Tuan? ")
+    pemain = Pemain(nama)
+    
+    print(f"\n✨ Selamat datang, {pemain.nama}!")
+    print(f"   Petualanganmu dimulai di {pemain.lokasi}...")
+    time.sleep(2)
+    
+    menu_utama(pemain)
+    
+if __name__ == "__main__":
+    game_utama()
