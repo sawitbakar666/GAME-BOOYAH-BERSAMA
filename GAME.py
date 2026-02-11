@@ -292,6 +292,112 @@ def tampilkan_artefak_kamar(pemain):
         time.sleep(2)
     else:
         print("\n❌ Pilihan tidak valid!")
+# ===== GAME OVER =====
+def tampilkan_game_over(pemain):
+    print("\n" + "="*70)
+    print("💀 GAME OVER - KEKALAHAN")
+    print("="*70)
+    
+    print(f"""
+    
+    Sadar atau tidak, dalam sekejap mata, nyawa {pemain.nama} melayang.
+    Sesuatu yang terlalu kuat, terlalu berbahaya, tergantian persisnya...
+    
+    😵 Dalam kondisi terbaring yang lemah, pandangan {pemain.nama} mulai
+       gelap. Suara-suara zombie terdengar mendekat, semakin keras, semakin
+       menakutkan...
+    
+    💀 Kota SERLOK TAK PARANI tetap dalam kegelapan.
+    
+    """)
+    
+    time.sleep(2)
+    
+    print("="*70)
+    print("📖 KISAH KEGAGALAN")
+    print("="*70)
+    
+    cerita_gagal = [
+        f"""
+    {pemain.nama} yang pemberani mencoba menyelamatkan kota dari wabah zombie.
+    Namun nasib tidak berpihak. Kamu terlalu terburu-buru, tidak cukup kuat,
+    dan tidak siap menghadapi ancaman yang begitu besar.
+    
+    Zombie-zombie ganas terus bertambah dan menyebar. Tanpa pahlawan sejati
+    untuk menghentikan mereka, wabah terus berkembang. Kota mayat ini semakin
+    penuh dengan korban-korban baru setiap hari.
+    
+    Penduduk yang selamat kehilangan harapan. Mereka menunggu seorang pahlawan
+    yang tidak pernah datang. Mereka menunggu penyelamat yang telah gagal.
+        """,
+        f"""
+    Ledakan energi zombie overwhelm {pemain.nama}. Kekuatan yang dilepaskan
+    oleh monster kota ini jauh melampaui imajinasi. Tidak ada artefak yang
+    cukup kuat. Tidak ada obat yang bisa menyembuhkan.
+    
+    Dalam keputusasaan terakhir, {pemain.nama} menyadari bahwa mereka
+    seharusnya telah berlatih lebih lama, mencapai level yang lebih tinggi,
+    atau mengumpulkan lebih banyak artefak kuno.
+    
+    Kota SERLOK TAK PARANI akan tetap menjadi tempat horor selamanya.
+    Legenda tentang pahlawan yang gagal akan diceritakan dari mulut ke mulut
+    sebagai peringatan bagi generasi mendatang.
+        """,
+        f"""
+    Hanya ada keheningan setelah napas terakhir {pemain.nama} berhenti.
+    
+    Monster gelap terus merampok nyawa di setiap jalan, di setiap sudut kota.
+    Wabah yang dimulai dari Laboratorium kini menguasai seluruh wilayah.
+    
+    Tidak ada yang tahu siapa saja para korban yang tersisa. Kota yang dulunya
+    penuh kehidupan kini menjadi makam besar untuk jutaan orang yang tidak
+    berdosa.
+    
+    Kegagalan {pemain.nama} akan menjadi dosa yang tidak terlunasi selamanya.
+        """
+    ]
+    
+    print(random.choice(cerita_gagal))
+    
+    time.sleep(3)
+    
+    print("\\n" + "="*70)
+    print("📊 STATISTIK AKHIR (KEGAGALAN)")
+    print("="*70)
+    
+    print(f"""
+    👤 Nama Pemberani       : {pemain.nama}
+    📈 Level Akhir          : {pemain.level}
+    💰 Total Emas Terkumpul : {pemain.emas}
+    ❤️  HP                   : {pemain.hp}/{pemain.max_hp}
+    🏆 Quest Selesai        : {len(pemain.quest_selesai)}
+    🎁 Artefak Dikumpulkan  : {len(pemain.artefak)}
+    
+    Mohon coba lagi dengan strategi yang lebih baik...
+    """)
+    
+    print("\\n" + "="*70)
+
+def restart_atau_keluar():
+    while True:
+        print(f"\\n{'='*40}")
+        print("🎮 PILIHAN AKHIR")
+        print(f"{'='*40}")
+        print("1. Mulai Ulang dari Awal")
+        print("2. Keluar dari Game")
+        
+        pilihan = input("\\nPilih opsi (1-2): ").strip()
+        
+        if pilihan == "1":
+            print("\\n⏳ Mempersiapkan petualangan baru...\\n")
+            time.sleep(2)
+            return True
+        elif pilihan == "2":
+            print("\\n👋 Terima kasih telah bermain BOOYAH BERSAMA!")
+            print("Semoga kali berikutnya Anda akan berhasil menyelamatkan kota!\\n")
+            return False
+        else:
+            print("\\n❌ Pilihan tidak valid!")
 
 # ===== ENDING GAME =====
 def tampilkan_ending(pemain):
@@ -409,7 +515,8 @@ def jelajahi_kota(pemain):
                         musuh = zombies_di_lokasi[zombie_type]
                         menang = pertarungan(pemain, musuh)
                         if not menang:
-                            break
+                            # Jika kalah, return untuk trigger game over
+                            return
                         # Jika berhasil mengalahkan AGUNG SUNDAKI, tampilkan ending
                         elif musuh.nama == "AGUNG SUNDAKI" and menang:
                             tampilkan_ending(pemain)
@@ -439,8 +546,8 @@ def menu_utama(pemain):
             
         elif pilihan == "2":
             jelajahi_kota(pemain)
-            # Jika game selesai, keluar dari menu
-            if pemain.game_selesai:
+            # Jika game selesai atau pemain mati, keluar dari menu
+            if pemain.game_selesai or pemain.hp == 1:
                 break
             
         elif pilihan == "3":
@@ -492,16 +599,27 @@ Apakah kamu siap untuk menyelamatkan Kota Serlok Tak Parani?
     print("="*50)
 
 def game_utama():
-    intro_game()
-    
-    nama = input("\n👤 Siapa namamu, Pahlawan ")
-    pemain = Pemain(nama)
-    
-    print(f"\n✨ Selamat datang, {pemain.nama}!")
-    print(f"   Petualanganmu dimulai di {pemain.lokasi}...")
-    time.sleep(2)
-    
-    menu_utama(pemain)
+    while True:
+        intro_game()
+        
+        nama = input("\n👤 Siapa namamu, Pahlawan? ")
+        pemain = Pemain(nama)
+        
+        print(f"\n✨ Selamat datang, {pemain.nama}!")
+        print(f"   Petualanganmu dimulai di {pemain.lokasi}...")
+        time.sleep(2)
+        
+        menu_utama(pemain)
+        
+        # Jika game selesai (menang), tanyakan apakah ingin bermain lagi
+        if pemain.game_selesai:
+            if not restart_atau_keluar():
+                break
+        # Jika HP = 1 (mati), tampilkan game over
+        elif pemain.hp == 1:
+            tampilkan_game_over(pemain)
+            if not restart_atau_keluar():
+                break
     
 if __name__ == "__main__":
     game_utama()
