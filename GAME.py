@@ -14,9 +14,11 @@ class Pemain:
         self.exp_max = 100
         self.emas = 100
         self.inventori = {"Pistol": 1, "Peluru": 30, "Obat HP": 3}
+        self.artefak = []
         self.lokasi = "Gerbang Kota"
         self.quest_aktif = None
         self.quest_selesai = []
+        self.game_selesai = False
         
     def tampilkan_status(self):
         print(f"\n╔════════════════════════════════════════╗")
@@ -79,8 +81,8 @@ lokasi_kota = {
     ),
     "Laboratorium": Lokasi(
         "Laboratorium",
-        "Pusat penelitian biologis. Sumber virus zombie berasal dari sini! Terasa ada sesuatu yang menakutkan di dalam...",
-        ["Zombie Mutan", "Zombie Mutan", "AGUNG SUNDAKI"]
+        "Pusat penelitian biologis. Sumber virus zombie berasal dari sini!",
+        ["Zombie Mutan", "Zombie Mutan"]
     ),
     "Persimpangan Jalan": Lokasi(
         "Persimpangan Jalan",
@@ -91,6 +93,11 @@ lokasi_kota = {
         "Gedung Pemerintah",
         "Kantor pusat pemerintahan kota. Di sini mungkin tersimpan dokumen penting.",
         ["Zombie Biasa", "Zombie Biasa", "Zombie Mutan"]
+    ),
+    "Kamar Tua": Lokasi(
+        "Kamar Tua",
+        "Sebuah ruangan kuno yang misterius, penuh dengan artefak bersejarah yang bersinar aneh. Di sini terpancar energi gelap... AGUNG SUNDAKI ada di sini!",
+        ["AGUNG SUNDAKI"]
     )
 }
 
@@ -225,6 +232,140 @@ def tampilkan_quest(pemain):
     
     return quests
 
+# ===== SISTEM ARTEFAK KUNO =====
+def tampilkan_artefak_kamar(pemain):
+    print("\n" + "="*60)
+    print("🏛️ ARTEFAK KUNO DI KAMAR TUA")
+    print("="*60)
+    print("""
+    Kamu memasuki ruangan yang penuh dengan artefak bersejarah.
+    Di sini tersimpan kekuatan kuno yang legendaris!
+    
+    Pilih salah satu artefak untuk meningkatkan kekuatanmu:
+    """)
+    
+    artefak_tersedia = {
+        "1": {
+            "nama": "Pedang Cahaya Kuno",
+            "deskripsi": "Pedang yang bersinar dengan cahaya spiritual. Meningkatkan ATK 30!",
+            "efek": "attack",
+            "nilai": 30
+        },
+        "2": {
+            "nama": "Baju Zirah Pelindung",
+            "deskripsi": "Zirah dari zaman dahulu dengan mantra perlindungan. Menambah HP 100!",
+            "efek": "health",
+            "nilai": 100
+        },
+        "3": {
+            "nama": "Mahkota Kebijaksanaan",
+            "deskripsi": "Mahkota yang memberikan nalar tinggi. Meningkatkan Level 5!",
+            "efek": "level",
+            "nilai": 5
+        }
+    }
+    
+    for kode, artefak in artefak_tersedia.items():
+        print(f"\n{kode}. {artefak['nama']}")
+        print(f"   {artefak['deskripsi']}")
+    
+    pilihan = input("\nPilih artefak (1-3): ").strip()
+    
+    if pilihan in artefak_tersedia:
+        artefak = artefak_tersedia[pilihan]
+        pemain.artefak.append(artefak['nama'])
+        
+        print(f"\n✨ Kamu mengambil {artefak['nama']}!")
+        print(f"💫 Kekuatan legendaris mengalir melalui tubuhmu!\n")
+        time.sleep(1.5)
+        
+        if artefak['efek'] == "attack":
+            print(f"🔥 Seranganmu akan 30% lebih kuat!\n")
+        elif artefak['efek'] == "health":
+            pemain.max_hp += artefak['nilai']
+            pemain.hp = pemain.max_hp
+            print(f"❤️ HP maksimum mu meningkat menjadi {pemain.max_hp}!\n")
+        elif artefak['efek'] == "level":
+            pemain.level += artefak['nilai']
+            print(f"⭐ Levelmu meningkat drastis menjadi level {pemain.level}!\n")
+        
+        time.sleep(2)
+    else:
+        print("\n❌ Pilihan tidak valid!")
+
+# ===== ENDING GAME =====
+def tampilkan_ending(pemain):
+    print("\n" + "="*70)
+    print("🎬 ENDING - KEMENANGAN TERAKHIR")
+    print("="*70)
+    
+    print("""
+    
+    💀 AGUNG SUNDAKI, monster zombie yang telah merajalela di kota
+       SERLOK TAK PARANI selama berbulan-bulan, akhirnya tergoyahkan!
+    
+    ⚔️ Dengan kemenangan berguncang, jasad AGUNG SUNDAKI terjatuh
+       ke tanah, dan energi gelap yang menyelubungi kota mulai surut.
+    
+    ✨ Virus zombie yang telah menginfeksi ribuan penduduk kota
+       perlahan-lahan memudar, hilang seiring dengan hilangnya sang
+       penyebab wabah.
+    
+    """)
+    
+    time.sleep(3)
+    
+    print("="*70)
+    print("📜 EPILOG - TIGA BULAN SETELAH KEMENANGAN")
+    print("="*70)
+    
+    print(f"""
+    
+    Kota SERLOK TAK PARANI telah mulai pulih dengan pesat. Penduduk yang
+    selamat kembali membangun hidup mereka dari puing-puing kehancuran.
+    
+    {pemain.nama}, sang pahlawan penyelamat, diterima dengan sambutan
+    meriah di seluruh kota. Patung emas didirikan di Pasar Utama sebagai
+    tanda terima kasih atas keberanian dan pengorbanannya yang luar biasa.
+    
+    Laboratorium telah ditutup dan dijadikan makam untuk para korban wabah.
+    Kamar Tua, tempat di mana keputusan akhir terjadi, kini menjadi tempat
+    suci yang dilindungi. Artefak-artefak kuno disimpan dengan baik untuk
+    peringatan generasi mendatang.
+    
+    💪 {pemain.nama} diangkat sebagai PELINDUNG KOTA seumur hidup!
+    
+    Malam hari, ketika langit berbintang, {pemain.nama} menatap kota yang
+    telah diselamatkan, menyadari bahwa perjalanan berbahaya, kerja keras,
+    dan pengorbanan telah menghasilkan kedamaian dan harapan baru.
+    
+    Kota SERLOK TAK PARANI aman lagi... Berkat seorang pahlawan sejati!
+    
+    ═══════════════════════════════════════════════════════════════════════
+    
+    📊 STATISTIK AKHIR PERMAINAN:
+    ═══════════════════════════════════════════════════════════════════════
+    
+    👤 Nama Pahlawan        : {pemain.nama}
+    📈 Level Akhir          : {pemain.level}
+    💰 Total Emas           : {pemain.emas}
+    ❤️  HP Maksimum          : {pemain.max_hp}
+    🏆 Quest Selesai        : {len(pemain.quest_selesai)}
+    🎁 Artefak Dikumpulkan  : {len(pemain.artefak)}
+    """)
+    
+    if pemain.artefak:
+        print("\n🏛️ Artefak Legendaris yang Digunakan:")
+        for artefak in pemain.artefak:
+            print(f"   ✓ {artefak}")
+    
+    print("\n" + "="*70)
+    print("🎮 TERIMA KASIH TELAH BERMAIN BOOYAH BERSAMA!")
+    print("="*70)
+    print(f"\n👋 Game berakhir... Legenda {pemain.nama} akan dikenang selamanya!\n")
+    
+    pemain.game_selesai = True
+
 # ===== PENJELAJAHAN KOTA =====
 def jelajahi_kota(pemain):
     print(f"\n🗺️ PETA KOTA SERLOK TAK PARANI")
@@ -254,6 +395,10 @@ def jelajahi_kota(pemain):
                 opsi = input("Lawan mereka? (y/t): ").lower()
                 
                 if opsi == 'y':
+                    # Jika ini Kamar Tua, tawarkan artefak terlebih dahulu
+                    if loc_name == "Kamar Tua":
+                        tampilkan_artefak_kamar(pemain)
+                    
                     zombies_di_lokasi = {
                         "Zombie Biasa": Zombie("Zombie Biasa", 30, 15, 50),
                         "Zombie Mutan": Zombie("Zombie Mutan", 60, 25, 100),
@@ -262,8 +407,13 @@ def jelajahi_kota(pemain):
                     
                     for zombie_type in lokasi.zombie_spawn:
                         musuh = zombies_di_lokasi[zombie_type]
-                        if not pertarungan(pemain, musuh):
+                        menang = pertarungan(pemain, musuh)
+                        if not menang:
                             break
+                        # Jika berhasil mengalahkan AGUNG SUNDAKI, tampilkan ending
+                        elif musuh.nama == "AGUNG SUNDAKI" and menang:
+                            tampilkan_ending(pemain)
+                            return
             else:
                 print("\n✨ Lokasi ini aman dari zombie.")
     except ValueError:
@@ -289,6 +439,9 @@ def menu_utama(pemain):
             
         elif pilihan == "2":
             jelajahi_kota(pemain)
+            # Jika game selesai, keluar dari menu
+            if pemain.game_selesai:
+                break
             
         elif pilihan == "3":
             tampilkan_quest(pemain)
@@ -341,7 +494,7 @@ Apakah kamu siap untuk menyelamatkan Kota Serlok Tak Parani?
 def game_utama():
     intro_game()
     
-    nama = input("\n👤 Siapa namamu, Tuan? ")
+    nama = input("\n👤 Siapa namamu, Pahlawan ")
     pemain = Pemain(nama)
     
     print(f"\n✨ Selamat datang, {pemain.nama}!")
